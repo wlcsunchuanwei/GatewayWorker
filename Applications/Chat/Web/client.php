@@ -1,5 +1,28 @@
 ﻿<?php
 error_reporting(E_ALL & ~E_NOTICE);
+if (strpos($_SERVER['HTTP_USER_AGENT'],'MicroMessenger') == false ){
+ ?>
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0">
+    </head>
+    <body>
+        <script type="text/javascript">
+            var ua = navigator.userAgent.toLowerCase();
+            var isWeixin = ua.indexOf('micromessenger') != -1;
+            var isAndroid = ua.indexOf('android') != -1;
+            var isIos = (ua.indexOf('iphone') != -1) || (ua.indexOf('ipad') != -1);
+            if (!isWeixin) {
+                document.head.innerHTML = '<title>抱歉，出错了</title><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0"><link rel="stylesheet" type="text/css" href="https://res.wx.qq.com/open/libs/weui/0.4.1/weui.css">';
+                document.body.innerHTML = '<div class="weui_msg"><div class="weui_icon_area"><i class="weui_icon_info weui_icon_msg"></i></div><div class="weui_text_area"><h4 class="weui_msg_title">请在微信客户端打开链接</h4></div></div>';
+            }
+        </script>
+    </body>
+</html>
+<?php 
+  exit;  
+  }
 if(empty($_GET['name']) || empty($_GET['headimgurl']) || empty($_GET['YS']) || empty($_GET['openid']))
 {     
     header("Location: http://".$_SERVER['SERVER_NAME']); 
@@ -12,7 +35,7 @@ if(empty($_GET['name']) || empty($_GET['headimgurl']) || empty($_GET['YS']) || e
     <title>聊天室</title>  
     <meta charset="utf-8" />  
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">  
-    <meta name="viewport" content="width=device-width, initial-scale=1">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />  
     <link href="/css/index.css" rel="stylesheet" />  
     <link href="/css/bootstrap.min.css" rel="stylesheet" media="screen">
     <link href="/css/reset.css" rel="stylesheet" >
@@ -210,7 +233,7 @@ var ws, client_list={},clientAll_list={};
       var to_client_name = $("#client_list option:selected").text();
       ws.send('{"type":"say","to_client_id":"'+to_client_id+'","to_client_name":"'+to_client_name+'","content":"'+escape(input.value)+'"}');
       input.value = "";
-      input.focus(); 
+      //input.focus(); 
       // $('.box_ft_bd').toggleClass('hide',true);
     }
 
@@ -256,10 +279,11 @@ var ws, client_list={},clientAll_list={};
     {
        $("#messageList").append('<div class="message"><img class="avatar" src="'+url+'"  /><div class="content"><div class="nickname">'+ys+' ：'+from_client_name+'<span class="time">'+time+'</span></div><div class="bubble bubble_default left"><div class="bubble_cont"><div class="plain">'+replace_em(unescape(content))+'</div></div></div></div></div>');
     } 
+   // throttle(10,setdiv());
     //刷新滚动条
     setdiv();
     //1秒后停止刷新
-    setTimeout(setdivcose,500);
+    setTimeout(setdivcose,200);
    }
      //房间跳转
     function openurl(room_id)
@@ -280,14 +304,23 @@ var ws, client_list={},clientAll_list={};
     {
     var div = document.getElementById('messageList');
     div.scrollTop = div.scrollHeight;   
-    t = setTimeout(setdiv,100);
+    t = setTimeout(setdiv,10);
     } 
     //停止刷新
     function setdivcose()
     {
      clearTimeout(t); 
     }
-
+  var throttle = function(delay, action){
+  var last = 0 ;
+  return function(){
+    var curr = +new Date();
+    if (curr - last > delay){
+      action.apply(this, arguments);
+      last = curr ;
+    }
+  }
+}
 </script>
 <script type="text/javascript">  
 $(function(){
@@ -349,7 +382,6 @@ $(function(){
     onQueueComplete:function(queueData){
       console.log('队列中的文件全部上传完成',queueData);
     }
-
   });
   //更新选择的值
   select_client_id = 'all';
